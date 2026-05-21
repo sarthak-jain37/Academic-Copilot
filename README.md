@@ -17,5 +17,7 @@ Tech Stack:
 - PyMuPDF
 
 Run:
+```bash
 uv sync
 uv run uvicorn app.main:app --reload
+```
