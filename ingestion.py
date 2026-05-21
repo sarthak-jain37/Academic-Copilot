@@ -1,6 +1,6 @@
 from chunker import chunk_document
 from parser import parse_document
-from embeddings import client, MyEmbeddingFunction
+from embeddings import chroma_client, MyEmbeddingFunction
 
 documents = [
     "docs/Deans List Criteria.pdf",
@@ -12,53 +12,40 @@ documents = [
     "docs/Policy on Credit Limit and Credit Extension.pdf",
     "docs/Policy on Grading System.pdf",
     "docs/Policy on Minimum Class Size.pdf",
-]
-
-chunks = []
-all_ids = []
-all_metadata = []
-
-try:
-    client.delete_collection("policy_chunks")
-except:
-    pass 
-
-collection = client.get_or_create_collection(
-    "policy_chunks",
-    embedding_function=MyEmbeddingFunction()
-)
-
-
-for document in documents:
-    source, full_text = parse_document(document)
+]    
+ 
+def ingest_document(source, full_text, collection):
     if full_text is None:
-        continue
-    
+        return
+
+    doc_chunks = chunk_document(full_text, chunk_size=750, overlap=100)
+
+    all_ids = []
+    all_metadata = []
+
+    for i in range(len(doc_chunks)):
+        all_ids.append(f"{source}_chunk_{i}")
+        all_metadata.append({"source": source})
+
+    collection.delete(where={"source": source})
+
+    collection.add(
+        documents=doc_chunks,
+        ids=all_ids,
+        metadatas=all_metadata
+    )   
+
+def run_ingestion():
     try:
-        doc_chunks = chunk_document(full_text, chunk_size=750, overlap=100)
-        chunks.extend(doc_chunks)
-        print(f"{source} chunking successful ({len(doc_chunks)} chunks)")
+        chroma_client.delete_collection("policy_chunks")
+    except Exception:
+        pass
 
-    except Exception as e:
-        print(f"{source}: {e}")
-        continue
-    
-    # IDs + metadata
-    try:
-        for i in range(len(doc_chunks)):
-            all_ids.append(f"{source}_chunk_{i}")
-            all_metadata.append({"source": source})
+    collection = chroma_client.get_or_create_collection(
+        "policy_chunks",
+        embedding_function=MyEmbeddingFunction()
+    )
 
-        print(f"{source} IDs and metadata created")
-
-    except Exception as e:
-        print(f"Failed creating IDs/metadata for {source}: {e}")
-        continue
-
-collection.add(
-    documents=chunks,
-    ids=all_ids,
-    metadatas=all_metadata
-)
-
-print("\nAll chunks added to Chroma successfully")
+    for document in documents:
+        source, full_text = parse_document(document)
+        ingest_document(source, full_text, collection)

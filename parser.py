@@ -1,8 +1,6 @@
 import re
 import pymupdf
 
-
-
 def clean_text(text):
     text = re.sub(r"\.{5,}", " ", text)
     text = re.sub(r"Page\s+\d+\s+of\s+\d+", " ", text)
@@ -10,6 +8,20 @@ def clean_text(text):
     text = re.sub(r"[ \t]+", " ", text)
 
     return text.strip()
+
+def parse_uploaded_document(pdf_bytes, filename):
+    source = filename.replace(".pdf", "")
+
+    with pymupdf.open(stream=pdf_bytes, filetype="pdf") as doc:
+        all_pages = []
+
+        for page in doc:
+            all_pages.append(page.get_text())
+
+    full_text = "\n".join(all_pages)
+    full_text = clean_text(full_text)
+
+    return source, full_text
 
 
 def parse_document(document):
