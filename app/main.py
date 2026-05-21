@@ -1,10 +1,10 @@
 from fastapi import FastAPI, status, HTTPException, UploadFile, File
 from app import schemas
-from ingestion import ingest_document, run_ingestion
-from embeddings import chroma_client, MyEmbeddingFunction
-from parser import parse_uploaded_document
-from augmenter import build_context, build_prompt
-from generator import generate_answer
+from app.rag.ingestion import ingest_document, run_ingestion
+from app.rag.embeddings import chroma_client, MyEmbeddingFunction
+from app.rag.parser import parse_uploaded_document
+from app.rag.augmenter import build_context, build_prompt
+from app.rag.generator import generate_answer
 
 app = FastAPI()
 

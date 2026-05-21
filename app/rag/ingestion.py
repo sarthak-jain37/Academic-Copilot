@@ -1,6 +1,6 @@
-from chunker import chunk_document
-from parser import parse_document
-from embeddings import chroma_client, MyEmbeddingFunction
+from app.rag.chunker import chunk_document
+from app.rag.parser import parse_document
+from app.rag.embeddings import chroma_client, MyEmbeddingFunction
 
 documents = [
     "docs/Deans List Criteria.pdf",
